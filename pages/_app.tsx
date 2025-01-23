@@ -1,13 +1,35 @@
 // pages/_app.tsx
 import { AppProps } from 'next/app';
-import { ThemeProvider } from '../context/ThemeContext';
-import '../styles/globals.css';
+import { SessionProvider } from 'next-auth/react';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { AuthProvider } from '@/context/AuthContext';
 
-function MyApp({ Component, pageProps }: AppProps) {
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import '../styles/globals.css';
+import { useRouter } from 'next/router';
+
+// Pages that don't require authentication
+const publicPages = ['/login', '/register'];
+
+function MyApp({ 
+  Component, 
+  pageProps: { session, ...pageProps } 
+}: AppProps) {
+  const router = useRouter();
   return (
-    <ThemeProvider>
-      <Component {...pageProps} />
-    </ThemeProvider>
+    <SessionProvider session={session}>
+      <ThemeProvider>
+        <AuthProvider>
+          {publicPages.includes(router.pathname) ? (
+            <Component {...pageProps} />
+          ) : (
+            <ProtectedRoute>
+              <Component {...pageProps} />
+            </ProtectedRoute>
+          )}
+        </AuthProvider>
+      </ThemeProvider>
+    </SessionProvider>
   );
 }
 
