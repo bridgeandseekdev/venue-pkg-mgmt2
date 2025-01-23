@@ -1,12 +1,32 @@
 export interface User {
   _id: string;
   email: string;
+  password: string;
   role: string;
   venueId: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Brand {
+  _id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Venue {
+  _id: string;
+  brandId: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Package {
   _id: string;
+  brandId: string;
   venueId: string;
   name: string;
   description: string;

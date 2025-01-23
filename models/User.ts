@@ -1,11 +1,20 @@
-import mongoose from 'mongoose';
+import mongoose, {Document, Types} from 'mongoose';
 import { User } from '../types';
 
-const UserSchema = new mongoose.Schema<User>({
+export type UserDocument = Omit<User, '_id' | 'venueId'> & {
+  _id: Types.ObjectId; // Replace _id with ObjectId
+  venueId: Types.ObjectId; // Replace venueId with ObjectId
+} & Document;
+
+const UserSchema = new mongoose.Schema<UserDocument>({
   email: { 
     type: String, 
     required: true, 
     unique: true 
+  },
+  password: {
+    type: String,
+    required: true
   },
   role: { 
     type: String, 
@@ -13,11 +22,20 @@ const UserSchema = new mongoose.Schema<User>({
     enum: ['venue_admin'] 
   },
   venueId: { 
-    type: String, 
-    required: true 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Venue',
+    required: true, 
+  },
+  name: {
+    type: String
   }
 }, {
   timestamps: true
 });
 
-export default mongoose.models.User || mongoose.model<User>('User', UserSchema);
+UserSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
+});
+
+export default mongoose.models.User || mongoose.model<UserDocument>('User', UserSchema);

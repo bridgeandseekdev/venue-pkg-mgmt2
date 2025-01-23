@@ -1,10 +1,37 @@
-import mongoose from 'mongoose';
-import { Package } from '../types';
+import mongoose, {Types, Document} from 'mongoose';
+import { Package, PricingDetails } from '../types';
 
-const PackageSchema = new mongoose.Schema<Package>({
-  venueId: { 
-    type: String, 
-    required: true 
+export type PackageDocument = Omit<Package, '_id' | 'venueId' | 'brandId'> & {
+  _id: Types.ObjectId; // Replace _id with ObjectId
+  venueId: Types.ObjectId; // Replace venueId with ObjectId
+  brandId: Types.ObjectId; // Replace brandId with ObjectId
+} & Document;
+
+const PricingDetailsSchema = new mongoose.Schema<PricingDetails>({
+  type: {
+    type: String,
+    required: true,
+    enum: ['recurring', 'hourly', 'onetime', 'free'], 
+  },
+  billingCycleStartDay: { type: Number, required: false },
+  price: { type: Number, required: false },
+  tax: { type: Number, required: false },
+  securityDeposit: { type: Number, required: false },
+  prorationEnabled: { type: Boolean, required: false },
+  membershipEnabled: { type: Boolean, required: false },
+  minimumHourlyBooking: { type: Number, required: false },
+}, { _id: false }); // Disable _id for subdocuments
+
+const PackageSchema = new mongoose.Schema<PackageDocument>({
+  brandId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Brand',
+    required: true,
+  },
+  venueId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Venue',
+    required: true,
   },
   name: { 
     type: String, 
@@ -31,9 +58,15 @@ const PackageSchema = new mongoose.Schema<Package>({
       url: String,
       key: String
     }
-  }
+  },
+  pricing: { type: PricingDetailsSchema, required: false },
 }, {
   timestamps: true
 });
 
-export default mongoose.models.Package || mongoose.model<Package>('Package', PackageSchema);
+PackageSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
+});
+
+export default mongoose.models.Package || mongoose.model<PackageDocument>('Package', PackageSchema);
