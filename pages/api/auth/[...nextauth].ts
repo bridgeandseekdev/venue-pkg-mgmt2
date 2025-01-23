@@ -4,6 +4,7 @@ import connectDB from "@/lib/mongodb";
 import bcrypt from 'bcryptjs';
 import User from "@/models/User";
 
+
 export default NextAuth({
   providers: [
     CredentialsProvider({
@@ -19,8 +20,9 @@ export default NextAuth({
 
         try {
           await connectDB();
-
+        
           const user = await User.findOne({ email: credentials.email });
+
 
           if (!user) {
             return null;
