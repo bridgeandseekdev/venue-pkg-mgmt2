@@ -10,7 +10,7 @@ const PricingDetailsSchema = new mongoose.Schema<PricingDetails>({
   type: {
     type: String,
     required: true,
-    enum: ['recurring', 'hourly', 'onetime', 'free'], 
+    enum: ['monthly', 'hourly', 'onetime', 'free'], 
   },
   billingCycleStartDay: { type: Number, required: false },
   price: { type: Number, required: false },

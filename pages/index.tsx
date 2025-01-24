@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/packages');
+      router.push('/create-package');
     } else if (status === 'unauthenticated') {
       router.push('/login');
     }

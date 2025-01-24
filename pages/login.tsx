@@ -43,7 +43,7 @@ export default function LoginPage() {
       }
 
       // Redirect to dashboard or packages page
-      router.push('/packages');
+      router.push('/create-package');
     } catch (err) {
       setError(`An unexpected error occurred ${err}`);
     }
