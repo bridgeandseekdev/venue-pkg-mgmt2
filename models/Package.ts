@@ -9,7 +9,7 @@ export type PackageDocument = Omit<Package, '_id' | 'venueId'> & {
 const PricingDetailsSchema = new mongoose.Schema<PricingDetails>({
   type: {
     type: String,
-    required: true,
+    required: false,
     enum: ['monthly', 'hourly', 'onetime', 'free'], 
   },
   billingCycleStartDay: { type: Number, required: false },
