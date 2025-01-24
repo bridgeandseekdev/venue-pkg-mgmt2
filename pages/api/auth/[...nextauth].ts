@@ -43,7 +43,8 @@ export default NextAuth({
             id: user._id.toString(),
             email: user.email,
             role: user.role,
-            venueId: user.venueId
+            venueId: user.venueId,
+            name: user.name,
           };
         } catch (error) {
           console.error('Authentication error:', error);
@@ -61,6 +62,7 @@ export default NextAuth({
         token.id = user.id;
         token.role = user.role;
         token.venueId = user.venueId;
+        token.name = user.name
       }
       return token;
     },
@@ -68,6 +70,7 @@ export default NextAuth({
       session.user.id = token.id;
       session.user.role = token.role;
       session.user.venueId = token.venueId;
+      session.user.name = token.name;
       return session;
     }
   },

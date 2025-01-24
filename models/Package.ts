@@ -1,10 +1,9 @@
 import mongoose, {Types, Document} from 'mongoose';
 import { Package, PricingDetails } from '../types';
 
-export type PackageDocument = Omit<Package, '_id' | 'venueId' | 'brandId'> & {
+export type PackageDocument = Omit<Package, '_id' | 'venueId'> & {
   _id: Types.ObjectId; // Replace _id with ObjectId
   venueId: Types.ObjectId; // Replace venueId with ObjectId
-  brandId: Types.ObjectId; // Replace brandId with ObjectId
 } & Document;
 
 const PricingDetailsSchema = new mongoose.Schema<PricingDetails>({
@@ -23,11 +22,6 @@ const PricingDetailsSchema = new mongoose.Schema<PricingDetails>({
 }, { _id: false }); // Disable _id for subdocuments
 
 const PackageSchema = new mongoose.Schema<PackageDocument>({
-  brandId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Brand',
-    required: true,
-  },
   venueId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Venue',
