@@ -1,7 +1,7 @@
 // pages/_app.tsx
 import { AppProps } from 'next/app';
 import { SessionProvider } from 'next-auth/react';
-import { ThemeProvider } from '@/context/ThemeContext';
+// import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -18,8 +18,7 @@ function MyApp({
   const router = useRouter();
   return (
     <SessionProvider session={session}>
-      <ThemeProvider>
-        <AuthProvider>
+      <AuthProvider>
           {publicPages.includes(router.pathname) ? (
             <Component {...pageProps} />
           ) : (
@@ -28,7 +27,6 @@ function MyApp({
             </ProtectedRoute>
           )}
         </AuthProvider>
-      </ThemeProvider>
     </SessionProvider>
   );
 }

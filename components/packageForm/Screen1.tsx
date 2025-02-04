@@ -44,7 +44,7 @@ const Screen1 = () => {
         render={({ field }) => (
           <div>
             <label>Name:</label>
-            <input {...field} />
+            <input {...field} className='dark:text-red text-black' />
             {errors.name && <p>{errors.name.message}</p>}
           </div>
         )}
