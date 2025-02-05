@@ -7,9 +7,17 @@ const PackageForm = () => {
   const { state } = usePackageContext();
 
   return (
-    <div>
-      {state.step === 1 && <Screen1 />}
-      {state.step === 2 && <Screen2 />}
+    <div className='container max-w-3xl mx-auto py-8 px-4 md:px-0'>
+      <div className='mb-8'>
+        <h1 className='text-3xl font-semibold text-center mb-2'>Create new package</h1>
+        <p className='text-center'>
+          {state.step === 1 ? "Enter the basic details of your package": "Configure pricing and membership options"}
+        </p>
+      </div>
+      <div>
+        {state.step === 1 && <Screen1 />}
+        {state.step === 2 && <Screen2 />}
+      </div>
     </div>
   );
 };

@@ -31,7 +31,7 @@ const initialState: PackageState = {
   venueId: null,
   name: '',
   description: '',
-  quantity: 0,
+  quantity: 1,
   isInstantlyBookable: false,
   media: {
     image: { url: '', key: '' },
