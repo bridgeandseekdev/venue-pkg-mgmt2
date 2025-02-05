@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { yupPackageSchema } from '../../lib/yupPackageSchema';
@@ -15,6 +15,30 @@ const Screen1 = () => {
     resolver: yupResolver(yupPackageSchema),
     defaultValues: state,
   });
+  const { reset, setValue } = useForm();
+
+  useEffect(() => {
+    reset(state);
+  }, [state, reset]);
+
+  const handleFileUpload =
+    (mediaType: 'image' | 'video') =>
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      // Simulate API call to upload media
+      const fakeUrl = URL.createObjectURL(file);
+      const fakeKey = `${mediaType}-${Date.now()}`;
+
+      dispatch({
+        type: 'UPDATE_MEDIA',
+        mediaType,
+        value: { url: fakeUrl, key: fakeKey },
+      });
+
+      setValue(`media.${mediaType}`, { url: fakeUrl, key: fakeKey });
+    };
 
   const onSubmit = async (data) => {
     // Simulate API call to save the package
@@ -141,7 +165,7 @@ const Screen1 = () => {
             <input
               type="file"
               accept="image/jpeg,image/png"
-              // onChange={handleFileUpload("image")}
+              onChange={handleFileUpload('image')}
               className="hidden"
               id="image-upload"
             />
@@ -157,7 +181,7 @@ const Screen1 = () => {
             <input
               type="file"
               accept="video/mp4"
-              // onChange={handleFileUpload("video")}
+              onChange={handleFileUpload('video')}
               className="hidden"
               id="video-upload"
             />
