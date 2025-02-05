@@ -7,12 +7,12 @@ export const yupPackageSchema = Yup.object().shape({
   isInstantlyBookable: Yup.boolean(),
   media: Yup.object().shape({
     image: Yup.object().shape({
-      url: Yup.string().url('Invalid URL'),
-      key: Yup.string(),
-    }),
+      url: Yup.string().url('Invalid URL').nullable(),
+      key: Yup.string().nullable(),
+    }).nullable(),
     video: Yup.object().shape({
-      url: Yup.string().url('Invalid URL'),
-      key: Yup.string(),
-    }),
+      url: Yup.string().url('Invalid URL').nullable(),
+      key: Yup.string().nullable(),
+    }).nullable(),
   }),
 });
