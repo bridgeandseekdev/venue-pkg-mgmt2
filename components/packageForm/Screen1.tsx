@@ -1,9 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { yupPackageSchema } from '../../lib/yupPackageSchema';
 import { usePackageContext } from '../../context/PackageContext';
 import { Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
+import { UploadStatus } from '@/types';
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 20 * 1024 * 1024; // 20MB
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+const ACCEPTED_VIDEO_TYPES = ['video/mp4'];
 
 const Screen1 = () => {
   const { state, dispatch } = usePackageContext();
@@ -17,9 +23,40 @@ const Screen1 = () => {
   });
   const { reset, setValue } = useForm();
 
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>({
+    type: null,
+    status: null,
+  });
+
   useEffect(() => {
     reset(state);
   }, [state, reset]);
+
+  const validateFile = (file: File, type: 'image' | 'video') => {
+    const maxSize = type === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
+    const acceptedTypes =
+      type === 'image' ? ACCEPTED_IMAGE_TYPES : ACCEPTED_VIDEO_TYPES;
+
+    if (!acceptedTypes.includes(file.type)) {
+      throw new Error(
+        `Invalid ${type} type. Only ${acceptedTypes.join(', ')} are allowed.`,
+      );
+    }
+    if (file.size > maxSize) {
+      throw new Error(
+        `File size exceeds the limit of ${maxSize / 1024 / 1024}MB.`,
+      );
+    }
+  };
+
+  // const handleDelete = (mediaType: 'image' | 'video') => () => {
+  //   setValue(`media.${mediaType}`, { url: null, key: null });
+  //   dispatch({
+  //     type: 'UPDATE_MEDIA',
+  //     mediaType,
+  //     value: { url: null, key: null },
+  //   });
+  // };
 
   const handleFileUpload =
     (mediaType: 'image' | 'video') =>
@@ -28,21 +65,79 @@ const Screen1 = () => {
       if (!file) return;
 
       // Simulate API call to upload media
-      const fakeUrl = URL.createObjectURL(file);
-      const fakeKey = `${mediaType}-${Date.now()}`;
+      // const fakeUrl = URL.createObjectURL(file);
+      // const fakeKey = `${mediaType}-${Date.now()}`;
 
-      dispatch({
-        type: 'UPDATE_MEDIA',
-        mediaType,
-        value: { url: fakeUrl, key: fakeKey },
-      });
+      try {
+        validateFile(file, mediaType);
+        setUploadStatus({ type: mediaType, status: 'uploading' });
 
-      setValue(`media.${mediaType}`, { url: fakeUrl, key: fakeKey });
+        const response = await fetch('/api/upload-urls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contentType: file.type,
+            fileType: mediaType,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get upload URL');
+        }
+
+        const { uploadUrl, key } = await response.json();
+
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload file');
+        }
+
+        const finalUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${key}`;
+
+        setValue(`media.${mediaType}`, { url: finalUrl, key });
+        dispatch({
+          type: 'UPDATE_MEDIA',
+          mediaType,
+          value: { url: finalUrl, key },
+        });
+        setUploadStatus({ type: mediaType, status: 'success' });
+        console.log(uploadStatus);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert(error instanceof Error ? error.message : 'Failed to upload file');
+
+        setValue(`media.${mediaType}`, { url: null, key: null });
+        dispatch({
+          type: 'UPDATE_MEDIA',
+          mediaType,
+          value: { url: null, key: null },
+        });
+        setUploadStatus({ type: mediaType, status: 'error' });
+      } finally {
+        e.target.value = '';
+      }
+
+      // dispatch({
+      //   type: 'UPDATE_MEDIA',
+      //   mediaType,
+      //   value: { url: fakeUrl, key: fakeKey },
+      // });
+
+      // setValue(`media.${mediaType}`, { url: fakeUrl, key: fakeKey });
     };
 
   const onSubmit = async (data) => {
     // Simulate API call to save the package
+
     try {
+      console.log('Saving package:', data);
       const response = await fetch('/api/packages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -198,14 +293,13 @@ const Screen1 = () => {
 
       <div className="mt-8 flex justify-end">
         <button type="submit">Save</button>
-        {state.packageId && (
-          <button
-            type="button"
-            onClick={() => dispatch({ type: 'SET_STEP', step: 2 })}
-          >
-            Next Step
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'SET_STEP', step: 2 })}
+          disabled={!state.packageId}
+        >
+          Next Step
+        </button>
       </div>
     </form>
   );

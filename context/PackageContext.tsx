@@ -60,7 +60,7 @@ type PackageAction =
   | {
       type: 'UPDATE_MEDIA';
       mediaType: keyof PackageState['media'];
-      value: { url: string; key: string };
+      value: { url: string | null; key: string | null };
     }
   | {
       type: 'UPDATE_PRICING';

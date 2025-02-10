@@ -57,3 +57,8 @@ export interface PricingDetails {
   membershipEnabled?: boolean;
   minimumHourlyBooking?: number;
 }
+
+export type UploadStatus = {
+  type: 'image' | 'video' | null;
+  status: 'uploading' | 'success' | 'error' | null;
+}
