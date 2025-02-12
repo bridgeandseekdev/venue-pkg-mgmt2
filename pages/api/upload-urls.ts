@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const uploadUrl = await generateUploadUrl(key, contentType);
 
-    res.status(200).json({ key, uploadUrl });
+    res.status(200).json({ key, uploadUrl, finalUrl:`https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}` });
   } catch (error) {
     console.error('Error generating upload URL:', error);
     res.status(500).json({ message: 'Error generating upload URL' });

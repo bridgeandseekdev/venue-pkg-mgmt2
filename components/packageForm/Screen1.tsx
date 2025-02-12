@@ -85,7 +85,7 @@ const Screen1 = () => {
           throw new Error('Failed to get upload URL');
         }
 
-        const { uploadUrl, key } = await response.json();
+        const { uploadUrl, key, finalUrl } = await response.json();
 
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
@@ -98,8 +98,6 @@ const Screen1 = () => {
         if (!uploadResponse.ok) {
           throw new Error('Failed to upload file');
         }
-
-        const finalUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${key}`;
 
         setValue(`media.${mediaType}`, { url: finalUrl, key });
         dispatch({
