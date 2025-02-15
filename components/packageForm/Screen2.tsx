@@ -31,6 +31,28 @@ const Screen2 = () => {
     reset(state);
   }, [state, reset]);
 
+  const onSubmit = async () => {
+    // Simulate API call to save the package
+    console.log('----saving', state.pricing);
+
+    try {
+      // const response = await fetch('/api/packages', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(data),
+      // });
+      // const result = await response.json();
+      // if (response.ok) {
+      //   // Update the context with the package ID
+      //   dispatch({ type: 'SET_PACKAGE_ID', packageId: result.packageId });
+      // } else {
+      //   console.error('Failed to save package:', result.message);
+      // }
+    } catch (error) {
+      console.error('Error saving package:', error);
+    }
+  };
+
   const renderPricingFields = () => {
     switch (state.pricing.pricingType) {
       case 'recurring':
@@ -161,29 +183,6 @@ const Screen2 = () => {
 
       default:
         return null;
-    }
-  };
-
-  const onSubmit = async (data) => {
-    // Simulate API call to save the package
-
-    try {
-      console.log('Saving package:', data);
-      // const response = await fetch('/api/packages', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
-      // const result = await response.json();
-
-      // if (response.ok) {
-      //   // Update the context with the package ID
-      //   dispatch({ type: 'SET_PACKAGE_ID', packageId: result.packageId });
-      // } else {
-      //   console.error('Failed to save package:', result.message);
-      // }
-    } catch (error) {
-      console.error('Error saving package:', error);
     }
   };
 

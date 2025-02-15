@@ -15,7 +15,7 @@ const Screen1 = () => {
   const { state, dispatch } = usePackageContext();
   const {
     control,
-    handleSubmit,
+    trigger,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(yupPackageSchema),
@@ -32,31 +32,29 @@ const Screen1 = () => {
     reset(state);
   }, [state, reset]);
 
+  const handleNext = async () => {
+    const isValid = await trigger();
+    if (isValid) {
+      dispatch({ type: 'SET_STEP', step: 2 });
+    }
+  };
+
   const validateFile = (file: File, type: 'image' | 'video') => {
     const maxSize = type === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
     const acceptedTypes =
       type === 'image' ? ACCEPTED_IMAGE_TYPES : ACCEPTED_VIDEO_TYPES;
 
     if (!acceptedTypes.includes(file.type)) {
-      throw new Error(
+      alert(
         `Invalid ${type} type. Only ${acceptedTypes.join(', ')} are allowed.`,
       );
+      return false;
     }
     if (file.size > maxSize) {
-      throw new Error(
-        `File size exceeds the limit of ${maxSize / 1024 / 1024}MB.`,
-      );
+      alert(`File size exceeds the limit of ${maxSize / 1024 / 1024}MB.`);
+      return false;
     }
   };
-
-  // const handleDelete = (mediaType: 'image' | 'video') => () => {
-  //   setValue(`media.${mediaType}`, { url: null, key: null });
-  //   dispatch({
-  //     type: 'UPDATE_MEDIA',
-  //     mediaType,
-  //     value: { url: null, key: null },
-  //   });
-  // };
 
   const handleFileUpload =
     (mediaType: 'image' | 'video') =>
@@ -64,12 +62,8 @@ const Screen1 = () => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      // Simulate API call to upload media
-      // const fakeUrl = URL.createObjectURL(file);
-      // const fakeKey = `${mediaType}-${Date.now()}`;
-
       try {
-        validateFile(file, mediaType);
+        if (!validateFile(file, mediaType)) return;
         setUploadStatus({ type: mediaType, status: 'uploading' });
 
         const response = await fetch('/api/upload-urls', {
@@ -119,43 +113,14 @@ const Screen1 = () => {
         });
         setUploadStatus({ type: mediaType, status: 'error' });
       } finally {
-        e.target.value = '';
+        if (e?.target) {
+          e.target.value = '';
+        }
       }
-
-      // dispatch({
-      //   type: 'UPDATE_MEDIA',
-      //   mediaType,
-      //   value: { url: fakeUrl, key: fakeKey },
-      // });
-
-      // setValue(`media.${mediaType}`, { url: fakeUrl, key: fakeKey });
     };
 
-  const onSubmit = async (data) => {
-    // Simulate API call to save the package
-
-    try {
-      console.log('Saving package:', data);
-      const response = await fetch('/api/packages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const result = await response.json();
-
-      if (response.ok) {
-        // Update the context with the package ID
-        dispatch({ type: 'SET_PACKAGE_ID', packageId: result.packageId });
-      } else {
-        console.error('Failed to save package:', result.message);
-      }
-    } catch (error) {
-      console.error('Error saving package:', error);
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form>
       <div className="flex flex-col space-y-1 mb-8">
         <label htmlFor="name">Package Name</label>
         <Controller
@@ -290,12 +255,7 @@ const Screen1 = () => {
       </div>
 
       <div className="mt-8 flex justify-end">
-        <button type="submit">Save</button>
-        <button
-          type="button"
-          onClick={() => dispatch({ type: 'SET_STEP', step: 2 })}
-          disabled={!state.packageId}
-        >
+        <button type="button" onClick={handleNext}>
           Next Step
         </button>
       </div>
