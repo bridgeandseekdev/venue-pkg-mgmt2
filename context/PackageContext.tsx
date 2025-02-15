@@ -14,7 +14,7 @@ interface PackageState {
     video: { url: string | null; key: string | null };
   };
   pricing: {
-    type: string;
+    pricingType: string;
     billingCycleStartDay: number | null;
     price: number | null;
     tax: number | null;
@@ -38,7 +38,7 @@ const initialState: PackageState = {
     video: { url: null, key: null },
   },
   pricing: {
-    type: '',
+    pricingType: 'recurring',
     billingCycleStartDay: null,
     price: null,
     tax: null,

@@ -48,7 +48,7 @@ export interface Package {
 }
 
 export interface PricingDetails {
-  type: 'monthly' | 'hourly' | 'onetime' | 'free';
+  pricingType: 'recurring' | 'hourly' | 'onetime' | 'free';
   billingCycleStartDay?: number;
   price?: number;
   tax?: number;

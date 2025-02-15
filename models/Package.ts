@@ -7,7 +7,7 @@ export type PackageDocument = Omit<Package, '_id' | 'venueId'> & {
 } & Document;
 
 const PricingDetailsSchema = new mongoose.Schema<PricingDetails>({
-  type: {
+  pricingType: {
     type: String,
     required: false,
     enum: ['monthly', 'hourly', 'onetime', 'free'], 
