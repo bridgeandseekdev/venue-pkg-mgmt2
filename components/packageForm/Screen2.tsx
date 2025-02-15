@@ -58,7 +58,7 @@ const Screen2 = () => {
       case 'recurring':
         return (
           <>
-            <div>
+            <div className="flex flex-col space-y-1 mb-8">
               <label htmlFor="billingCycleStartDay">
                 Billing Cycle Start Day
               </label>
@@ -80,6 +80,7 @@ const Screen2 = () => {
                         value,
                       });
                     }}
+                    className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
                   >
                     {Array.from({ length: 31 }, (_, i) => (
                       <option key={i + 1} value={i + 1}>
@@ -93,7 +94,7 @@ const Screen2 = () => {
                 <p>{errors.billingCycleStartDay.message}</p>
               )}
             </div>
-            <div>
+            <div className="flex flex-col space-y-1 mb-8">
               <label htmlFor="prorationEnabled">Enable Proration:</label>
               <Controller
                 name="prorationEnabled"
@@ -114,7 +115,7 @@ const Screen2 = () => {
                 )}
               />
             </div>
-            <div>
+            <div className="flex flex-col space-y-1 mb-8">
               <label htmlFor="securityDeposit">Security Deposit</label>
               <Controller
                 name="securityDeposit"
@@ -134,6 +135,7 @@ const Screen2 = () => {
                         value,
                       });
                     }}
+                    className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
                   />
                 )}
               />
@@ -146,7 +148,7 @@ const Screen2 = () => {
 
       case 'hourly':
         return (
-          <div>
+          <div className="flex flex-col space-y-1 mb-8">
             <label htmlFor="minimumHourlyBooking">Minimum Hourly Booking</label>
             <Controller
               name="minimumHourlyBooking"
@@ -166,6 +168,7 @@ const Screen2 = () => {
                       value,
                     });
                   }}
+                  className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
                 >
                   {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map((hours) => (
                     <option key={hours} value={hours}>
@@ -188,7 +191,7 @@ const Screen2 = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div>
+      <div className="flex flex-col space-y-1 mb-8">
         <label htmlFor="packageType">Pricing Type</label>
         <Controller
           name="pricingType"
@@ -205,6 +208,7 @@ const Screen2 = () => {
                   value: e.target.value,
                 });
               }}
+              className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
             >
               {packageTypes.map((type) => (
                 <option key={type.id} value={type.id}>
@@ -219,7 +223,7 @@ const Screen2 = () => {
 
       {state.pricing.pricingType !== 'free' && (
         <>
-          <div>
+          <div className="flex flex-col space-y-1 mb-8">
             <label htmlFor="price">Price</label>
             <Controller
               name="price"
@@ -239,13 +243,14 @@ const Screen2 = () => {
                       value,
                     });
                   }}
+                  className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
                 />
               )}
             />
             {errors.price && <p>{errors.price.message}</p>}
           </div>
 
-          <div>
+          <div className="flex flex-col space-y-1 mb-8">
             <label htmlFor="tax">Tax (%)</label>
             <Controller
               name="tax"
@@ -265,6 +270,7 @@ const Screen2 = () => {
                       value,
                     });
                   }}
+                  className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
                 />
               )}
             />
