@@ -3,6 +3,7 @@ import { usePackageContext } from '../../context/PackageContext';
 import { useForm, Controller } from 'react-hook-form';
 import { yupPricingSchema } from '@/lib/yupPricingSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { Switch } from '../ui/Switch';
 
 const Screen2 = () => {
   const { state, dispatch } = usePackageContext();
@@ -14,11 +15,6 @@ const Screen2 = () => {
     resolver: yupResolver(yupPricingSchema),
     defaultValues: state.pricing,
   });
-  // const {
-  //   control,
-  //   handleSubmit,
-  //   formState: { errors },
-  // } = useForm({ defaultValues: state.pricing });
   const { reset } = useForm();
   const packageTypes = [
     { id: 'recurring', label: 'Recurring(Monthly)' },
@@ -94,21 +90,21 @@ const Screen2 = () => {
                 <p>{errors.billingCycleStartDay.message}</p>
               )}
             </div>
-            <div className="flex flex-col space-y-1 mb-8">
+            <div className="flex justify-between align-middle mb-8">
               <label htmlFor="prorationEnabled">Enable Proration:</label>
               <Controller
                 name="prorationEnabled"
                 control={control}
                 render={({ field }) => (
-                  <input
-                    type="checkbox"
+                  <Switch
+                    id="prorationEnabled"
                     checked={field.value}
-                    onChange={(e) => {
-                      field.onChange(e.target.checked);
+                    onCheckedChange={(checked) => {
+                      field.onChange(checked);
                       dispatch({
                         type: 'UPDATE_PRICING',
                         field: 'prorationEnabled',
-                        value: e.target.checked,
+                        value: checked,
                       });
                     }}
                   />
@@ -281,21 +277,21 @@ const Screen2 = () => {
 
       {renderPricingFields()}
 
-      <div className="mb-8">
-        <label htmlFor="membershipEnabled">Enable Membership:</label>
+      <div className="flex justify-between align-middle mb-8">
+        <label htmlFor="membershipEnabled">Enable Membership</label>
         <Controller
           name="membershipEnabled"
           control={control}
           render={({ field }) => (
-            <input
-              type="checkbox"
+            <Switch
+              id="membershipEnabled"
               checked={field.value}
-              onChange={(e) => {
-                field.onChange(e.target.checked);
+              onCheckedChange={(checked) => {
+                field.onChange(checked);
                 dispatch({
                   type: 'UPDATE_PRICING',
                   field: 'membershipEnabled',
-                  value: e.target.checked,
+                  value: checked,
                 });
               }}
             />

@@ -5,6 +5,7 @@ import { yupPackageSchema } from '../../lib/yupPackageSchema';
 import { usePackageContext } from '../../context/PackageContext';
 import { Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
 import { UploadStatus } from '@/types';
+import { Switch } from '../ui/Switch';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 20 * 1024 * 1024; // 20MB
@@ -194,21 +195,21 @@ const Screen1 = () => {
         {errors.quantity && <p>{errors.quantity.message}</p>}
       </div>
 
-      <div className="mb-8">
-        <label htmlFor="instantlyBookable">Instantly Bookable:</label>
+      <div className="flex justify-between align-middle mb-8">
+        <label htmlFor="instantlyBookable">Instantly Bookable</label>
         <Controller
           name="isInstantlyBookable"
           control={control}
           render={({ field }) => (
-            <input
-              type="checkbox"
+            <Switch
+              id="isInstantlyBookable"
               checked={field.value}
-              onChange={(e) => {
-                field.onChange(e.target.checked);
+              onCheckedChange={(checked) => {
+                field.onChange(checked);
                 dispatch({
                   type: 'UPDATE_FIELD',
                   field: 'isInstantlyBookable',
-                  value: e.target.checked,
+                  value: checked,
                 });
               }}
             />
