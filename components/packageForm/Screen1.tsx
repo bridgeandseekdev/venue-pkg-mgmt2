@@ -256,7 +256,11 @@ const Screen1 = () => {
       </div>
 
       <div className="mt-8 flex justify-end">
-        <button type="button" onClick={handleNext}>
+        <button
+          type="button"
+          onClick={handleNext}
+          className="rounded-md text-white font-medium bg-black py-2 px-8"
+        >
           Next Step
         </button>
       </div>

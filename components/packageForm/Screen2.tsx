@@ -300,13 +300,19 @@ const Screen2 = () => {
         {errors.membershipEnabled && <p>{errors.membershipEnabled.message}</p>}
       </div>
 
-      <div>
-        <button type="submit">Save</button>
+      <div className="flex justify-between mt-12">
         <button
           type="button"
           onClick={() => dispatch({ type: 'SET_STEP', step: 1 })}
+          className="rounded-md font-medium border text-sm border-gray-500 py-2 px-6"
         >
-          Back
+          Previous Step
+        </button>
+        <button
+          type="submit"
+          className="rounded-md text-white font-semibold bg-black py-1 px-6"
+        >
+          Save Package
         </button>
       </div>
     </form>
