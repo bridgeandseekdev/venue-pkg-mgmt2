@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { nanoid } from 'nanoid';
+
 import { yupPackageSchema } from '../../lib/yupPackageSchema';
 import { usePackageContext } from '../../context/PackageContext';
 import { Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
@@ -9,6 +11,9 @@ import { Switch } from '../ui/Switch';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 20 * 1024 * 1024; // 20MB
+const MULTIPART_THRESHOLD = 5 * 1024 * 1024; // 5MB
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
+
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
 const ACCEPTED_VIDEO_TYPES = ['video/mp4'];
 
@@ -41,6 +46,7 @@ const Screen1 = () => {
   };
 
   const validateFile = (file: File, type: 'image' | 'video') => {
+    console.log('validating file', file);
     const maxSize = type === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
     const acceptedTypes =
       type === 'image' ? ACCEPTED_IMAGE_TYPES : ACCEPTED_VIDEO_TYPES;
@@ -55,6 +61,7 @@ const Screen1 = () => {
       alert(`File size exceeds the limit of ${maxSize / 1024 / 1024}MB.`);
       return false;
     }
+    return true;
   };
 
   const handleFileUpload =
@@ -63,45 +70,123 @@ const Screen1 = () => {
       const file = e.target.files?.[0];
       if (!file) return;
 
+      console.log('In file upload', file);
+
       try {
         if (!validateFile(file, mediaType)) return;
         setUploadStatus({ type: mediaType, status: 'uploading' });
 
-        const response = await fetch('/api/upload-urls', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contentType: file.type,
-            fileType: mediaType,
-          }),
-        });
+        const isLargeVideo =
+          file.type.startsWith('video/') && file.size > MULTIPART_THRESHOLD;
+        console.log('isLargeVideo', isLargeVideo);
 
-        if (!response.ok) {
-          throw new Error('Failed to get upload URL');
+        if (isLargeVideo) {
+          const chunks = Math.ceil(file.size / CHUNK_SIZE);
+          const key = `${mediaType}/${nanoid()}.${file.type.split('/')[1]}`;
+
+          //Initiate multipart upload
+          const initiateResponse = await fetch('/api/multipart/initiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              key,
+              contentType: file.type,
+            }),
+          });
+          const { uploadId } = await initiateResponse.json();
+
+          // Prepare all chunks for parallel upload
+          const uploadPromises = Array.from(
+            { length: chunks },
+            async (_, i) => {
+              const start = i * CHUNK_SIZE;
+              const end = Math.min(start + CHUNK_SIZE, file.size);
+              const chunk = file.slice(start, end);
+
+              // Get upload URL for this part
+              const urlResponse = await fetch('/api/multipart/getUploadUrl', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  key,
+                  uploadId,
+                  partNumber: i + 1,
+                }),
+              });
+              const { uploadUrl } = await urlResponse.json();
+
+              // Upload the chunk
+              const uploadResponse = await fetch(uploadUrl, {
+                method: 'PUT',
+                body: chunk,
+              });
+
+              if (!uploadResponse.ok) {
+                throw new Error(`Failed to upload part ${i + 1}`);
+              }
+
+              const ETag = uploadResponse.headers.get('ETag');
+              return {
+                PartNumber: i + 1,
+                ETag: ETag?.replace(/"/g, ''),
+              };
+            },
+          );
+
+          // Upload all parts in parallel
+          const uploadedParts = await Promise.all(uploadPromises);
+
+          //Complete multipart upload
+          const response = await fetch('/api/multipart/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              key,
+              uploadId,
+              parts: uploadedParts,
+            }),
+          });
+
+          console.log('----', response);
+        } else {
+          //Regular upload for other files
+          console.log('Regular upload starting');
+          const response = await fetch('/api/upload-urls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contentType: file.type,
+              fileType: mediaType,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to get upload URL');
+          }
+
+          const { uploadUrl, key, finalUrl } = await response.json();
+
+          const uploadResponse = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: {
+              'Content-Type': file.type,
+            },
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload file');
+          }
+
+          setValue(`media.${mediaType}`, { url: finalUrl, key });
+          dispatch({
+            type: 'UPDATE_MEDIA',
+            mediaType,
+            value: { url: finalUrl, key },
+          });
+          setUploadStatus({ type: mediaType, status: 'success' });
+          console.log(uploadStatus);
         }
-
-        const { uploadUrl, key, finalUrl } = await response.json();
-
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': file.type,
-          },
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload file');
-        }
-
-        setValue(`media.${mediaType}`, { url: finalUrl, key });
-        dispatch({
-          type: 'UPDATE_MEDIA',
-          mediaType,
-          value: { url: finalUrl, key },
-        });
-        setUploadStatus({ type: mediaType, status: 'success' });
-        console.log(uploadStatus);
       } catch (error) {
         console.error('Error uploading file:', error);
         alert(error instanceof Error ? error.message : 'Failed to upload file');
