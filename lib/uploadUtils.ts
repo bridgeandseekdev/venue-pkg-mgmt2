@@ -97,6 +97,8 @@ export async function completeMultipartUpload(
 
   try {
     await s3Client.send(command);
+    const finalUrl = await generatePresignedGetUrl(key);
+    return { key, finalUrl };
   } catch (error) {
     console.error('Error completing multipart upload:', error);
     throw error;

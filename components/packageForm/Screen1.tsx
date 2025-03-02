@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @next/next/no-img-element */
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
@@ -164,6 +163,18 @@ const Screen1 = () => {
               parts: uploadedParts,
             }),
           });
+          if (!response.ok) {
+            throw new Error('Failed to get upload URL');
+          }
+
+          const { finalUrl } = await response.json();
+          setValue(`media.${mediaType}`, { url: finalUrl, key });
+          dispatch({
+            type: 'UPDATE_MEDIA',
+            mediaType,
+            value: { url: finalUrl, key },
+          });
+
           setUploadStatus((prev) => ({
             ...prev,
             [mediaType]: { status: 'success' },
