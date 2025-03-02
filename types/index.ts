@@ -36,11 +36,11 @@ export interface Package {
     image?: {
       url: string;
       key: string;
-    },
+    };
     video?: {
       url: string;
       key: string;
-    }
+    };
   };
   pricing?: PricingDetails;
   createdAt: Date;
@@ -59,6 +59,10 @@ export interface PricingDetails {
 }
 
 export type UploadStatus = {
-  type: 'image' | 'video' | null;
-  status: 'uploading' | 'success' | 'error' | null;
-}
+  image: {
+    status: 'uploading' | 'success' | 'error' | null;
+  };
+  video: {
+    status: 'uploading' | 'success' | 'error' | null;
+  };
+};

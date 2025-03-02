@@ -29,8 +29,6 @@ const Screen2 = () => {
 
   const onSubmit = async () => {
     // Simulate API call to save the package
-    console.log('----saving', state.pricing);
-
     try {
       // const response = await fetch('/api/packages', {
       //   method: 'POST',

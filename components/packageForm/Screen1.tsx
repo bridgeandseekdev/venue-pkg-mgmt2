@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @next/next/no-img-element */
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -8,6 +10,7 @@ import { usePackageContext } from '../../context/PackageContext';
 import { Video as VideoIcon, Image as ImageIcon } from 'lucide-react';
 import { UploadStatus } from '@/types';
 import { Switch } from '../ui/Switch';
+import { UploadStatusIndicator } from '../ui/UploadStatusIndicator';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 20 * 1024 * 1024; // 20MB
@@ -30,8 +33,8 @@ const Screen1 = () => {
   const { reset, setValue } = useForm();
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({
-    type: null,
-    status: null,
+    image: { status: null },
+    video: { status: null },
   });
 
   useEffect(() => {
@@ -46,7 +49,6 @@ const Screen1 = () => {
   };
 
   const validateFile = (file: File, type: 'image' | 'video') => {
-    console.log('validating file', file);
     const maxSize = type === 'image' ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
     const acceptedTypes =
       type === 'image' ? ACCEPTED_IMAGE_TYPES : ACCEPTED_VIDEO_TYPES;
@@ -70,15 +72,31 @@ const Screen1 = () => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      console.log('In file upload', file);
-
       try {
         if (!validateFile(file, mediaType)) return;
-        setUploadStatus({ type: mediaType, status: 'uploading' });
+        setUploadStatus((prev) => ({
+          ...prev,
+          [mediaType]: { status: 'uploading' },
+        }));
+
+        const previewUrl = URL.createObjectURL(file);
+        dispatch({
+          type: 'SET_MEDIA_PREVIEW',
+          mediaType,
+          value: previewUrl,
+        });
+
+        // setTimeout(() => {
+        //   setUploadStatus((prev) => ({
+        //     ...prev,
+        //     [mediaType]: { status: 'error' },
+        //   }));
+        // }, 5000);
+
+        // return;
 
         const isLargeVideo =
           file.type.startsWith('video/') && file.size > MULTIPART_THRESHOLD;
-        console.log('isLargeVideo', isLargeVideo);
 
         if (isLargeVideo) {
           const chunks = Math.ceil(file.size / CHUNK_SIZE);
@@ -146,11 +164,12 @@ const Screen1 = () => {
               parts: uploadedParts,
             }),
           });
-
-          console.log('----', response);
+          setUploadStatus((prev) => ({
+            ...prev,
+            [mediaType]: { status: 'success' },
+          }));
         } else {
           //Regular upload for other files
-          console.log('Regular upload starting');
           const response = await fetch('/api/upload-urls', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -184,8 +203,10 @@ const Screen1 = () => {
             mediaType,
             value: { url: finalUrl, key },
           });
-          setUploadStatus({ type: mediaType, status: 'success' });
-          console.log(uploadStatus);
+          setUploadStatus((prev) => ({
+            ...prev,
+            [mediaType]: { status: 'success' },
+          }));
         }
       } catch (error) {
         console.error('Error uploading file:', error);
@@ -197,7 +218,10 @@ const Screen1 = () => {
           mediaType,
           value: { url: null, key: null },
         });
-        setUploadStatus({ type: mediaType, status: 'error' });
+        setUploadStatus((prev) => ({
+          ...prev,
+          [mediaType]: { status: 'error' },
+        }));
       } finally {
         if (e?.target) {
           e.target.value = '';
@@ -315,11 +339,22 @@ const Screen1 = () => {
             />
             <label
               htmlFor="image-upload"
-              className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-black/50 transition-colors"
+              className="flex flex-col p-6  h-40 items-center justify-center  border-2 border-dashed rounded-lg cursor-pointer hover:border-black/50 transition-colors"
             >
-              <ImageIcon className="w-8 h-8 mb-2 text-gray-400" />
-              <span className="text-sm text-gray-500">Upload image</span>
+              {state.media.image.previewUrl ? (
+                <img
+                  alt="image-preview"
+                  src={state.media.image.previewUrl}
+                  className="w-full h-40 object-cover rounded-lg"
+                />
+              ) : (
+                <div className="p-6 flex flex-col items-center justify-center">
+                  <ImageIcon className="w-8 h-8 mb-2 text-gray-400" />
+                  <span className="text-sm text-gray-500">Upload image</span>
+                </div>
+              )}
             </label>
+            <UploadStatusIndicator status={uploadStatus.image.status} />
           </div>
           <div className="relative">
             <input
@@ -331,11 +366,22 @@ const Screen1 = () => {
             />
             <label
               htmlFor="video-upload"
-              className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-black/50 transition-colors"
+              className="flex flex-col h-40 items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-black/50 transition-colors"
             >
-              <VideoIcon className="w-8 h-8 mb-2 text-gray-400" />
-              <span className="text-sm text-gray-500">Upload Video</span>
+              {state.media.video.previewUrl ? (
+                <video
+                  src={state.media.video.previewUrl}
+                  className="w-full h-40 object-cover rounded-lg"
+                  controls
+                />
+              ) : (
+                <div className="p-6 flex flex-col items-center justify-center">
+                  <VideoIcon className="w-8 h-8 mb-2 text-gray-400" />
+                  <span className="text-sm text-gray-500">Upload Video</span>
+                </div>
+              )}
             </label>
+            <UploadStatusIndicator status={uploadStatus.video.status} />
           </div>
         </div>
       </div>

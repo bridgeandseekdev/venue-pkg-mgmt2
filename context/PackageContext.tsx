@@ -10,8 +10,16 @@ interface PackageState {
   quantity: number;
   isInstantlyBookable: boolean;
   media: {
-    image: { url: string | null; key: string | null };
-    video: { url: string | null; key: string | null };
+    image: {
+      url: string | null;
+      key: string | null;
+      previewUrl: string | null;
+    };
+    video: {
+      url: string | null;
+      key: string | null;
+      previewUrl: string | null;
+    };
   };
   pricing: {
     pricingType: string;
@@ -34,8 +42,8 @@ const initialState: PackageState = {
   quantity: 1,
   isInstantlyBookable: false,
   media: {
-    image: { url: null, key: null },
-    video: { url: null, key: null },
+    image: { url: null, key: null, previewUrl: null },
+    video: { url: null, key: null, previewUrl: null },
   },
   pricing: {
     pricingType: 'recurring',
@@ -63,6 +71,11 @@ type PackageAction =
       value: { url: string | null; key: string | null };
     }
   | {
+      type: 'SET_MEDIA_PREVIEW';
+      mediaType: keyof PackageState['media'];
+      value: string | null;
+    }
+  | {
       type: 'UPDATE_PRICING';
       field: keyof PackageState['pricing'];
       value: string | number | boolean | null;
@@ -88,10 +101,27 @@ const packageReducer = (
   switch (action.type) {
     case 'UPDATE_FIELD':
       return { ...state, [action.field]: action.value };
+    case 'SET_MEDIA_PREVIEW':
+      return {
+        ...state,
+        media: {
+          ...state.media,
+          [action.mediaType]: {
+            ...state.media[action.mediaType],
+            previewUrl: action.value,
+          },
+        },
+      };
     case 'UPDATE_MEDIA':
       return {
         ...state,
-        media: { ...state.media, [action.mediaType]: action.value },
+        media: {
+          ...state.media,
+          [action.mediaType]: {
+            ...state.media[action.mediaType],
+            ...action.value,
+          },
+        },
       };
     case 'UPDATE_PRICING':
       return {
