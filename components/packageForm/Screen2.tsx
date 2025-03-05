@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { usePackageContext } from '../../context/PackageContext';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { yupPricingSchema } from '@/lib/yupPricingSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Switch } from '../ui/Switch';
+import { FormInput } from '../form/FormInput';
+import { FormSwitch } from '../form/FormSwitch';
+import { FormSelect } from '../form/FormSelect';
 
 const Screen2 = () => {
   const { state, dispatch } = usePackageContext();
@@ -52,130 +54,73 @@ const Screen2 = () => {
       case 'recurring':
         return (
           <>
-            <div className="flex flex-col space-y-1 mb-8">
-              <label htmlFor="billingCycleStartDay">
-                Billing Cycle Start Day
-              </label>
-              <Controller
-                name="billingCycleStartDay"
-                control={control}
-                render={({ field }) => (
-                  <select
-                    {...field}
-                    id="billingCycleStartDay"
-                    value={field.value ?? ''}
-                    onChange={(e) => {
-                      const value =
-                        e.target.value === '' ? null : Number(e.target.value);
-                      field.onChange(value);
-                      dispatch({
-                        type: 'UPDATE_PRICING',
-                        field: 'billingCycleStartDay',
-                        value,
-                      });
-                    }}
-                    className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
-                  >
-                    {Array.from({ length: 31 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        Day {i + 1}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              />
-              {errors.billingCycleStartDay && (
-                <p>{errors.billingCycleStartDay.message}</p>
-              )}
-            </div>
-            <div className="flex justify-between align-middle mb-8">
-              <label htmlFor="prorationEnabled">Enable Proration:</label>
-              <Controller
-                name="prorationEnabled"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    id="prorationEnabled"
-                    checked={field.value}
-                    onCheckedChange={(checked) => {
-                      field.onChange(checked);
-                      dispatch({
-                        type: 'UPDATE_PRICING',
-                        field: 'prorationEnabled',
-                        value: checked,
-                      });
-                    }}
-                  />
-                )}
-              />
-            </div>
-            <div className="flex flex-col space-y-1 mb-8">
-              <label htmlFor="securityDeposit">Security Deposit</label>
-              <Controller
-                name="securityDeposit"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    type="number"
-                    {...field}
-                    value={field.value ?? ''}
-                    onChange={(e) => {
-                      const value =
-                        e.target.value === '' ? null : Number(e.target.value);
-                      field.onChange(value);
-                      dispatch({
-                        type: 'UPDATE_PRICING',
-                        field: 'securityDeposit',
-                        value,
-                      });
-                    }}
-                    className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
-                  />
-                )}
-              />
-              {errors.securityDeposit && (
-                <p>{errors.securityDeposit.message}</p>
-              )}
-            </div>
+            <FormSelect
+              name="billingCycleStartDay"
+              label="Billing Cycle Start Day"
+              control={control}
+              options={Array.from({ length: 31 }, (_, i) => ({
+                value: i + 1,
+                label: `Day ${i + 1}`,
+              }))}
+              error={errors.billingCycleStartDay?.message}
+              onChange={(value) =>
+                dispatch({
+                  type: 'UPDATE_PRICING',
+                  field: 'billingCycleStartDay',
+                  value: Number(value),
+                })
+              }
+            />
+
+            <FormSwitch
+              name="prorationEnabled"
+              label="Enable Proration"
+              control={control}
+              onChange={(checked) =>
+                dispatch({
+                  type: 'UPDATE_PRICING',
+                  field: 'prorationEnabled',
+                  value: checked,
+                })
+              }
+            />
+
+            <FormInput
+              name="securityDeposit"
+              label="Security Deposit"
+              type="number"
+              control={control}
+              error={errors.securityDeposit?.message}
+              onChange={(value) =>
+                dispatch({
+                  type: 'UPDATE_PRICING',
+                  field: 'securityDeposit',
+                  value: value as number,
+                })
+              }
+            />
           </>
         );
 
       case 'hourly':
         return (
-          <div className="flex flex-col space-y-1 mb-8">
-            <label htmlFor="minimumHourlyBooking">Minimum Hourly Booking</label>
-            <Controller
-              name="minimumHourlyBooking"
-              control={control}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  id="minimumHourlyBooking"
-                  value={field.value ?? ''}
-                  onChange={(e) => {
-                    const value =
-                      e.target.value === '' ? null : Number(e.target.value);
-                    field.onChange(value);
-                    dispatch({
-                      type: 'UPDATE_PRICING',
-                      field: 'minimumHourlyBooking',
-                      value,
-                    });
-                  }}
-                  className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
-                >
-                  {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map((hours) => (
-                    <option key={hours} value={hours}>
-                      {hours} hour{hours > 1 ? 's' : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
-            />
-            {errors.minimumHourlyBooking && (
-              <p>{errors.minimumHourlyBooking.message}</p>
-            )}
-          </div>
+          <FormSelect
+            name="minimumHourlyBooking"
+            label="Minimum Hourly Booking"
+            control={control}
+            options={[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map((hours) => ({
+              value: hours,
+              label: `${hours} hour${hours > 1 ? 's' : ''}`,
+            }))}
+            error={errors.minimumHourlyBooking?.message}
+            onChange={(value) =>
+              dispatch({
+                type: 'UPDATE_PRICING',
+                field: 'minimumHourlyBooking',
+                value: Number(value),
+              })
+            }
+          />
         );
 
       default:
@@ -185,118 +130,72 @@ const Screen2 = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="flex flex-col space-y-1 mb-8">
-        <label htmlFor="packageType">Pricing Type</label>
-        <Controller
-          name="pricingType"
-          control={control}
-          render={({ field }) => (
-            <select
-              {...field}
-              id="packageType"
-              onChange={(e) => {
-                field.onChange(e.target.value);
-                dispatch({
-                  type: 'UPDATE_PRICING',
-                  field: 'pricingType',
-                  value: e.target.value,
-                });
-              }}
-              className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
-            >
-              {packageTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          )}
-        />
-        {errors.pricingType && <p>{errors.pricingType.message}</p>}
-      </div>
+      <FormSelect
+        name="pricingType"
+        label="Pricing Type"
+        control={control}
+        options={packageTypes.map((type) => ({
+          value: type.id,
+          label: type.label,
+        }))}
+        error={errors.pricingType?.message}
+        onChange={(value) =>
+          dispatch({
+            type: 'UPDATE_PRICING',
+            field: 'pricingType',
+            value,
+          })
+        }
+      />
 
       {state.pricing.pricingType !== 'free' && (
         <>
-          <div className="flex flex-col space-y-1 mb-8">
-            <label htmlFor="price">Price</label>
-            <Controller
-              name="price"
-              control={control}
-              render={({ field }) => (
-                <input
-                  type="number"
-                  {...field}
-                  value={field.value ?? ''}
-                  onChange={(e) => {
-                    const value =
-                      e.target.value === '' ? null : Number(e.target.value);
-                    field.onChange(value);
-                    dispatch({
-                      type: 'UPDATE_PRICING',
-                      field: 'price',
-                      value,
-                    });
-                  }}
-                  className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
-                />
-              )}
-            />
-            {errors.price && <p>{errors.price.message}</p>}
-          </div>
+          <FormInput
+            name="price"
+            label="Price"
+            type="number"
+            control={control}
+            error={errors.price?.message}
+            onChange={(value) =>
+              dispatch({
+                type: 'UPDATE_PRICING',
+                field: 'price',
+                value: value as number,
+              })
+            }
+          />
 
-          <div className="flex flex-col space-y-1 mb-8">
-            <label htmlFor="tax">Tax (%)</label>
-            <Controller
-              name="tax"
-              control={control}
-              render={({ field }) => (
-                <input
-                  type="number"
-                  {...field}
-                  value={field.value ?? ''}
-                  onChange={(e) => {
-                    const value =
-                      e.target.value === '' ? null : Number(e.target.value);
-                    field.onChange(value);
-                    dispatch({
-                      type: 'UPDATE_PRICING',
-                      field: 'tax',
-                      value,
-                    });
-                  }}
-                  className="border border-gray-300 w-full h-10 rounded-md text-sm px-3 py-2"
-                />
-              )}
-            />
-            {errors.tax && <p>{errors.tax.message}</p>}
-          </div>
+          <FormInput
+            name="tax"
+            label="Tax (%)"
+            type="number"
+            control={control}
+            error={errors.tax?.message}
+            onChange={(value) =>
+              dispatch({
+                type: 'UPDATE_PRICING',
+                field: 'tax',
+                value: value as number,
+              })
+            }
+          />
         </>
       )}
 
       {renderPricingFields()}
 
-      <div className="flex justify-between align-middle mb-8">
-        <label htmlFor="membershipEnabled">Enable Membership</label>
-        <Controller
-          name="membershipEnabled"
-          control={control}
-          render={({ field }) => (
-            <Switch
-              id="membershipEnabled"
-              checked={field.value}
-              onCheckedChange={(checked) => {
-                field.onChange(checked);
-                dispatch({
-                  type: 'UPDATE_PRICING',
-                  field: 'membershipEnabled',
-                  value: checked,
-                });
-              }}
-            />
-          )}
-        />
-        {errors.membershipEnabled && <p>{errors.membershipEnabled.message}</p>}
-      </div>
+      <FormSwitch
+        name="membershipEnabled"
+        label="Enable Membership"
+        control={control}
+        onChange={(checked) =>
+          dispatch({
+            type: 'UPDATE_PRICING',
+            field: 'membershipEnabled',
+            value: checked,
+          })
+        }
+      />
 
       <div className="flex justify-between mt-12">
         <button
