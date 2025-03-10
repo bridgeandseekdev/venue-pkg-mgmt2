@@ -22,7 +22,7 @@ interface PackageState {
     };
   };
   pricing: {
-    pricingType: string;
+    pricingType: 'recurring' | 'hourly' | 'onetime' | 'free';
     billingCycleStartDay: number | null;
     price: number | null;
     tax: number | null;
@@ -46,7 +46,7 @@ const initialState: PackageState = {
     video: { url: null, key: null, previewUrl: null },
   },
   pricing: {
-    pricingType: 'recurring',
+    pricingType: 'recurring' as const,
     billingCycleStartDay: null,
     price: null,
     tax: null,
@@ -82,7 +82,7 @@ type PackageAction =
     }
   | { type: 'SET_STEP'; step: number }
   | { type: 'SET_PACKAGE_ID'; packageId: string }
-  | { type: 'RESET' };
+  | { type: 'RESET_FORM' };
 
 // Create the context
 const PackageContext = createContext<{
@@ -132,7 +132,7 @@ const packageReducer = (
       return { ...state, step: action.step };
     case 'SET_PACKAGE_ID':
       return { ...state, packageId: action.packageId };
-    case 'RESET':
+    case 'RESET_FORM':
       return initialState;
     default:
       return state;

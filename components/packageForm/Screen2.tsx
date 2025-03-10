@@ -1,11 +1,18 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { usePackageContext } from '../../context/PackageContext';
-import { useForm } from 'react-hook-form';
+import { useForm, Resolver } from 'react-hook-form';
 import { yupPricingSchema } from '@/lib/yupPricingSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { FormInput } from '../form/FormInput';
 import { FormSwitch } from '../form/FormSwitch';
 import { FormSelect } from '../form/FormSelect';
+import { PricingDetails, Package } from '@/types';
+
+const packageTypes = [
+  { id: 'free', label: 'Free' },
+  { id: 'recurring', label: 'Recurring' },
+  { id: 'hourly', label: 'Hourly' },
+];
 
 const Screen2 = () => {
   const { state, dispatch } = usePackageContext();
@@ -13,38 +20,78 @@ const Screen2 = () => {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm({
-    resolver: yupResolver(yupPricingSchema),
-    defaultValues: state.pricing,
+  } = useForm<PricingDetails>({
+    resolver: yupResolver(
+      yupPricingSchema,
+    ) as unknown as Resolver<PricingDetails>,
+    defaultValues: {
+      pricingType: state.pricing.pricingType,
+      billingCycleStartDay:
+        state.pricing.billingCycleStartDay === null
+          ? undefined
+          : state.pricing.billingCycleStartDay,
+      price: state.pricing.price === null ? undefined : state.pricing.price,
+      tax: state.pricing.tax === null ? undefined : state.pricing.tax,
+      securityDeposit:
+        state.pricing.securityDeposit === null
+          ? undefined
+          : state.pricing.securityDeposit,
+      prorationEnabled: state.pricing.prorationEnabled ?? false,
+      membershipEnabled: state.pricing.membershipEnabled,
+      minimumHourlyBooking:
+        state.pricing.minimumHourlyBooking === null
+          ? undefined
+          : state.pricing.minimumHourlyBooking,
+    },
   });
-  const { reset } = useForm();
-  const packageTypes = [
-    { id: 'recurring', label: 'Recurring(Monthly)' },
-    { id: 'hourly', label: 'Hourly' },
-    { id: 'onetime', label: 'One-time' },
-    { id: 'free', label: 'Free' },
-  ];
 
-  useEffect(() => {
-    reset(state);
-  }, [state, reset]);
-
-  const onSubmit = async () => {
-    // Simulate API call to save the package
+  const onSubmit = async (pricingData: PricingDetails) => {
     try {
-      // const response = await fetch('/api/packages', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
-      // const result = await response.json();
-      // if (response.ok) {
-      //   // Update the context with the package ID
-      //   dispatch({ type: 'SET_PACKAGE_ID', packageId: result.packageId });
-      // } else {
-      //   console.error('Failed to save package:', result.message);
-      // }
+      const mediaForApi = {
+        image:
+          state.media.image && state.media.image.url && state.media.image.key
+            ? {
+                url: state.media.image.url,
+                key: state.media.image.key,
+              }
+            : undefined,
+        video:
+          state.media.video && state.media.video.url && state.media.video.key
+            ? {
+                url: state.media.video.url,
+                key: state.media.video.key,
+              }
+            : undefined,
+      };
+
+      const packageData: Omit<
+        Package,
+        '_id' | 'brandId' | 'createdAt' | 'updatedAt'
+      > = {
+        venueId: state.venueId!,
+        name: state.name,
+        description: state.description,
+        quantity: state.quantity,
+        isInstantlyBookable: state.isInstantlyBookable,
+        media: mediaForApi,
+        pricing: pricingData,
+      };
+
+      const response = await fetch('/api/packages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(packageData),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        dispatch({ type: 'SET_PACKAGE_ID', packageId: result.packageId });
+        dispatch({ type: 'SET_STEP', step: 3 });
+      } else {
+        alert(`Failed to save package: ${result.message}`);
+      }
     } catch (error) {
+      alert('Error saving package. Please try again.');
       console.error('Error saving package:', error);
     }
   };

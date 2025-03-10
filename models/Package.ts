@@ -1,4 +1,4 @@
-import mongoose, {Types, Document} from 'mongoose';
+import mongoose, { Types, Document } from 'mongoose';
 import { Package, PricingDetails } from '../types';
 
 export type PackageDocument = Omit<Package, '_id' | 'venueId'> & {
@@ -6,61 +6,68 @@ export type PackageDocument = Omit<Package, '_id' | 'venueId'> & {
   venueId: Types.ObjectId; // Replace venueId with ObjectId
 } & Document;
 
-const PricingDetailsSchema = new mongoose.Schema<PricingDetails>({
-  pricingType: {
-    type: String,
-    required: false,
-    enum: ['monthly', 'hourly', 'onetime', 'free'], 
-  },
-  billingCycleStartDay: { type: Number, required: false },
-  price: { type: Number, required: false },
-  tax: { type: Number, required: false },
-  securityDeposit: { type: Number, required: false },
-  prorationEnabled: { type: Boolean, required: false },
-  membershipEnabled: { type: Boolean, required: false },
-  minimumHourlyBooking: { type: Number, required: false },
-}, { _id: false }); // Disable _id for subdocuments
-
-const PackageSchema = new mongoose.Schema<PackageDocument>({
-  venueId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Venue',
-    required: true,
-  },
-  name: { 
-    type: String, 
-    required: true 
-  },
-  description: { 
-    type: String, 
-    required: true 
-  },
-  quantity: { 
-    type: Number, 
-    required: true 
-  },
-  isInstantlyBookable: { 
-    type: Boolean, 
-    default: false 
-  },
-  media: {
-    image: {
-      url: String,
-      key: String
+const PricingDetailsSchema = new mongoose.Schema<PricingDetails>(
+  {
+    pricingType: {
+      type: String,
+      required: false,
+      enum: ['recurring', 'hourly', 'onetime', 'free'],
     },
-    video: {
-      url: String,
-      key: String
-    }
+    billingCycleStartDay: { type: Number, required: false },
+    price: { type: Number, required: false },
+    tax: { type: Number, required: false },
+    securityDeposit: { type: Number, required: false },
+    prorationEnabled: { type: Boolean, required: false },
+    membershipEnabled: { type: Boolean, required: false },
+    minimumHourlyBooking: { type: Number, required: false },
   },
-  pricing: { type: PricingDetailsSchema, required: false },
-}, {
-  timestamps: true
-});
+  { _id: false },
+); // Disable _id for subdocuments
 
-PackageSchema.pre('save', function(next) {
+const PackageSchema = new mongoose.Schema<PackageDocument>(
+  {
+    venueId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Venue',
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+    },
+    isInstantlyBookable: {
+      type: Boolean,
+      default: false,
+    },
+    media: {
+      image: {
+        url: String,
+        key: String,
+      },
+      video: {
+        url: String,
+        key: String,
+      },
+    },
+    pricing: { type: PricingDetailsSchema, required: false },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+PackageSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });
 
-export default mongoose.models.Package || mongoose.model<PackageDocument>('Package', PackageSchema);
+export default mongoose.models.Package ||
+  mongoose.model<PackageDocument>('Package', PackageSchema);

@@ -3,9 +3,12 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import connectDB from '@/lib/mongodb';
 import Package from '@/models/Package';
 
-const secret = process.env.NEXTAUTH_SECRET; 
+const secret = process.env.NEXTAUTH_SECRET;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   // Verify the token
   const token = await getToken({ req, secret });
   if (!token) {
@@ -18,8 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Validate the request body
-  const { name, description, quantity, isInstantlyBookable, media } = req.body;
-  if (!name || !description || quantity === undefined || isInstantlyBookable === undefined) {
+  const { name, description, quantity, isInstantlyBookable, media, pricing } =
+    req.body;
+  if (
+    !name ||
+    !description ||
+    quantity === undefined ||
+    isInstantlyBookable === undefined
+  ) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
@@ -35,11 +44,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       quantity,
       isInstantlyBookable,
       media,
-      pricing: {}, // Empty pricing object (to be filled in Screen2)
+      pricing, // Include pricing data
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-
 
     // Return the package ID to the client
     res.status(201).json({ packageId: result._id });
