@@ -1,53 +1,63 @@
 import * as Yup from 'yup';
+import { PackagePricingFormData } from '@/types/forms';
+import { PricingType } from '@/types/models';
 
-export const yupPricingSchema = Yup.object().shape({
-  pricingType: Yup.string().required('Pricing type is required'),
+export const yupPricingSchema: Yup.ObjectSchema<PackagePricingFormData> =
+  Yup.object({
+    pricingType: Yup.string()
+      .oneOf(['recurring', 'hourly', 'free'], 'Invalid pricing type')
+      .required('Pricing type is required') as Yup.StringSchema<PricingType>,
 
-  billingCycleStartDay: Yup.number()
-    .nullable()
-    .when('pricingType', ([type], schema) =>
-      type === 'recurring'
-        ? schema.required('Billing cycle start day is required').min(1)
-        : schema,
-    ),
+    billingCycleStartDay: Yup.number()
+      .nullable()
+      .when('pricingType', {
+        is: 'recurring',
+        then: (schema) =>
+          schema.required('Billing cycle start day is required').min(1),
+        otherwise: (schema) => schema.nullable(),
+      }),
 
-  price: Yup.number()
-    .nullable()
-    .when('pricingType', ([type], schema) =>
-      type === 'free'
-        ? schema.nullable()
-        : schema.required('Price is required').min(0),
-    ),
+    price: Yup.number()
+      .nullable()
+      .when('pricingType', {
+        is: 'free',
+        then: (schema) => schema.nullable(),
+        otherwise: (schema) => schema.required('Price is required').min(0),
+      }),
 
-  tax: Yup.number()
-    .nullable()
-    .when('pricingType', ([type], schema) =>
-      type === 'free'
-        ? schema.nullable()
-        : schema.required('Tax is required').min(0),
-    ),
+    tax: Yup.number()
+      .nullable()
+      .when('pricingType', {
+        is: 'free',
+        then: (schema) => schema.nullable(),
+        otherwise: (schema) => schema.required('Tax is required').min(0),
+      }),
 
-  securityDeposit: Yup.number()
-    .nullable()
-    .when('pricingType', ([type], schema) =>
-      type === 'recurring'
-        ? schema.required('Security deposit is required').min(0)
-        : schema,
-    ),
+    securityDeposit: Yup.number()
+      .nullable()
+      .when('pricingType', {
+        is: 'recurring',
+        then: (schema) =>
+          schema.required('Security deposit is required').min(0),
+        otherwise: (schema) => schema.nullable(),
+      }),
 
-  prorationEnabled: Yup.boolean()
-    .when('pricingType', ([type], schema) =>
-      type === 'recurring' ? schema.required() : schema,
-    )
-    .default(false),
+    prorationEnabled: Yup.boolean()
+      .when('pricingType', {
+        is: 'recurring',
+        then: (schema) => schema.required(),
+        otherwise: (schema) => schema.default(false),
+      })
+      .default(false),
 
-  membershipEnabled: Yup.boolean().default(false),
+    membershipEnabled: Yup.boolean().default(false),
 
-  minimumHourlyBooking: Yup.number()
-    .nullable()
-    .when('pricingType', ([type], schema) =>
-      type === 'hourly'
-        ? schema.required('Minimum hourly booking is required').min(0.5)
-        : schema,
-    ),
-});
+    minimumHourlyBooking: Yup.number()
+      .nullable()
+      .when('pricingType', {
+        is: 'hourly',
+        then: (schema) =>
+          schema.required('Minimum hourly booking is required').min(0.5),
+        otherwise: (schema) => schema.nullable(),
+      }),
+  }) as Yup.ObjectSchema<PackagePricingFormData>;

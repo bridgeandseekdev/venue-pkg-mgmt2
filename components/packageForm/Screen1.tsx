@@ -8,6 +8,7 @@ import { FormTextArea } from '../form/FormTextArea';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import MediaUploadField from '../form/MediaUploadField';
 import { FormSwitch } from '../form/FormSwitch';
+import { PackageBasicFormData } from '@/types/forms';
 
 const Screen1 = () => {
   const { state, dispatch } = usePackageContext();
@@ -15,9 +16,9 @@ const Screen1 = () => {
     control,
     trigger,
     formState: { errors },
-  } = useForm({
+  } = useForm<PackageBasicFormData>({
     resolver: yupResolver(yupPackageSchema),
-    defaultValues: state,
+    defaultValues: state.basic,
   });
 
   const { uploadStatus, handleFileUpload } = useFileUpload({
@@ -69,7 +70,7 @@ const Screen1 = () => {
         placeholder="Enter package name"
         onChange={(value) =>
           dispatch({
-            type: 'UPDATE_FIELD',
+            type: 'UPDATE_BASIC',
             field: 'name',
             value: value as string,
           })
@@ -84,7 +85,7 @@ const Screen1 = () => {
         placeholder="Enter package description"
         onChange={(value) =>
           dispatch({
-            type: 'UPDATE_FIELD',
+            type: 'UPDATE_BASIC',
             field: 'description',
             value,
           })
@@ -99,7 +100,7 @@ const Screen1 = () => {
         error={errors.quantity?.message}
         onChange={(value) =>
           dispatch({
-            type: 'UPDATE_FIELD',
+            type: 'UPDATE_BASIC',
             field: 'quantity',
             value: value as number,
           })
@@ -112,7 +113,7 @@ const Screen1 = () => {
         control={control}
         onChange={(checked) =>
           dispatch({
-            type: 'UPDATE_FIELD',
+            type: 'UPDATE_BASIC',
             field: 'isInstantlyBookable',
             value: checked,
           })
@@ -125,13 +126,13 @@ const Screen1 = () => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <MediaUploadField
             type="image"
-            previewUrl={state.media.image.previewUrl}
+            previewUrl={state.basic.media.image.previewUrl}
             uploadStatus={uploadStatus.image.status}
             onChange={handleFileChange('image')}
           />
           <MediaUploadField
             type="video"
-            previewUrl={state.media.video.previewUrl}
+            previewUrl={state.basic.media.video.previewUrl}
             uploadStatus={uploadStatus.video.status}
             onChange={handleFileChange('video')}
           />

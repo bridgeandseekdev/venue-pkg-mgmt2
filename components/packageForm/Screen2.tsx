@@ -1,18 +1,19 @@
 import React from 'react';
 import { usePackageContext } from '../../context/PackageContext';
-import { useForm, Resolver } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { yupPricingSchema } from '@/lib/yupPricingSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { FormInput } from '../form/FormInput';
 import { FormSwitch } from '../form/FormSwitch';
 import { FormSelect } from '../form/FormSelect';
-import { PricingDetails, Package } from '@/types';
+import { PackagePricingFormData } from '@/types/forms';
+import { Package } from '@/types/models';
 
 const packageTypes = [
   { id: 'free', label: 'Free' },
   { id: 'recurring', label: 'Recurring' },
   { id: 'hourly', label: 'Hourly' },
-];
+] as const;
 
 const Screen2 = () => {
   const { state, dispatch } = usePackageContext();
@@ -20,46 +21,31 @@ const Screen2 = () => {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<PricingDetails>({
-    resolver: yupResolver(
-      yupPricingSchema,
-    ) as unknown as Resolver<PricingDetails>,
-    defaultValues: {
-      pricingType: state.pricing.pricingType,
-      billingCycleStartDay:
-        state.pricing.billingCycleStartDay === null
-          ? undefined
-          : state.pricing.billingCycleStartDay,
-      price: state.pricing.price === null ? undefined : state.pricing.price,
-      tax: state.pricing.tax === null ? undefined : state.pricing.tax,
-      securityDeposit:
-        state.pricing.securityDeposit === null
-          ? undefined
-          : state.pricing.securityDeposit,
-      prorationEnabled: state.pricing.prorationEnabled ?? false,
-      membershipEnabled: state.pricing.membershipEnabled,
-      minimumHourlyBooking:
-        state.pricing.minimumHourlyBooking === null
-          ? undefined
-          : state.pricing.minimumHourlyBooking,
-    },
+  } = useForm<PackagePricingFormData>({
+    resolver: yupResolver(yupPricingSchema),
   });
 
-  const onSubmit = async (pricingData: PricingDetails) => {
+  const onSubmit = async (pricingData: PackagePricingFormData) => {
     try {
       const mediaForApi = {
         image:
-          state.media.image && state.media.image.url && state.media.image.key
+          state.basic.media.image &&
+          state.basic.media.image.url &&
+          state.basic.media.image.key
             ? {
-                url: state.media.image.url,
-                key: state.media.image.key,
+                url: state.basic.media.image.url,
+                key: state.basic.media.image.key,
+                previewUrl: state.basic.media.image.previewUrl || null,
               }
             : undefined,
         video:
-          state.media.video && state.media.video.url && state.media.video.key
+          state.basic.media.video &&
+          state.basic.media.video.url &&
+          state.basic.media.video.key
             ? {
-                url: state.media.video.url,
-                key: state.media.video.key,
+                url: state.basic.media.video.url,
+                key: state.basic.media.video.key,
+                previewUrl: state.basic.media.video.previewUrl || null,
               }
             : undefined,
       };
@@ -69,10 +55,10 @@ const Screen2 = () => {
         '_id' | 'brandId' | 'createdAt' | 'updatedAt'
       > = {
         venueId: state.venueId!,
-        name: state.name,
-        description: state.description,
-        quantity: state.quantity,
-        isInstantlyBookable: state.isInstantlyBookable,
+        name: state.basic.name,
+        description: state.basic.description,
+        quantity: state.basic.quantity,
+        isInstantlyBookable: state.basic.isInstantlyBookable,
         media: mediaForApi,
         pricing: pricingData,
       };
@@ -190,7 +176,7 @@ const Screen2 = () => {
           dispatch({
             type: 'UPDATE_PRICING',
             field: 'pricingType',
-            value,
+            value: value as 'free' | 'recurring' | 'hourly',
           })
         }
       />

@@ -1,52 +1,57 @@
 import React, { createContext, useReducer, useContext, ReactNode } from 'react';
+import {
+  PackageFormState,
+  PackageFormStep,
+  PackageBasicFormData,
+  PackagePricingFormData,
+} from '@/types/forms';
+import { MediaItem } from '@/types/shared';
 
-// Define the initial state
-interface PackageState {
-  step: number;
-  packageId: string | null;
-  venueId: string | null;
-  name: string;
-  description: string;
-  quantity: number;
-  isInstantlyBookable: boolean;
-  media: {
-    image: {
-      url: string | null;
-      key: string | null;
-      previewUrl: string | null;
-    };
-    video: {
-      url: string | null;
-      key: string | null;
-      previewUrl: string | null;
-    };
-  };
-  pricing: {
-    pricingType: 'recurring' | 'hourly' | 'onetime' | 'free';
-    billingCycleStartDay: number | null;
-    price: number | null;
-    tax: number | null;
-    securityDeposit: number | null;
-    prorationEnabled: boolean;
-    membershipEnabled: boolean;
-    minimumHourlyBooking: number | null;
-  };
-}
+type PackageAction =
+  | { type: 'SET_STEP'; step: PackageFormStep }
+  | {
+      type: 'UPDATE_BASIC';
+      field: keyof PackageBasicFormData;
+      value: PackageBasicFormData[keyof PackageBasicFormData];
+    }
+  | {
+      type: 'UPDATE_PRICING';
+      field: keyof PackagePricingFormData;
+      value: PackagePricingFormData[keyof PackagePricingFormData];
+    }
+  | { type: 'SET_MEDIA_PREVIEW'; mediaType: 'image' | 'video'; value: string }
+  | {
+      type: 'UPDATE_MEDIA';
+      mediaType: 'image' | 'video';
+      value: Partial<MediaItem>;
+    }
+  | { type: 'SET_PACKAGE_ID'; packageId: string }
+  | { type: 'RESET_FORM' };
 
-const initialState: PackageState = {
+// Create the context with proper types
+const PackageContext = createContext<{
+  state: PackageFormState;
+  dispatch: React.Dispatch<PackageAction>;
+}>({
+  state: {} as PackageFormState,
+  dispatch: () => null,
+});
+
+const initialState: Omit<PackageFormState, 'venueId'> = {
   step: 1,
   packageId: null,
-  venueId: null,
-  name: '',
-  description: '',
-  quantity: 1,
-  isInstantlyBookable: false,
-  media: {
-    image: { url: null, key: null, previewUrl: null },
-    video: { url: null, key: null, previewUrl: null },
+  basic: {
+    name: '',
+    description: '',
+    quantity: 1,
+    isInstantlyBookable: false,
+    media: {
+      image: { url: null, key: null, previewUrl: null },
+      video: { url: null, key: null, previewUrl: null },
+    },
   },
   pricing: {
-    pricingType: 'recurring' as const,
+    pricingType: null,
     billingCycleStartDay: null,
     price: null,
     tax: null,
@@ -57,83 +62,63 @@ const initialState: PackageState = {
   },
 };
 
-type PackageAction =
-  | {
-      [K in keyof PackageState]: {
-        type: 'UPDATE_FIELD';
-        field: K;
-        value: PackageState[K];
-      };
-    }[keyof PackageState]
-  | {
-      type: 'UPDATE_MEDIA';
-      mediaType: keyof PackageState['media'];
-      value: { url: string | null; key: string | null };
-    }
-  | {
-      type: 'SET_MEDIA_PREVIEW';
-      mediaType: keyof PackageState['media'];
-      value: string | null;
-    }
-  | {
-      type: 'UPDATE_PRICING';
-      field: keyof PackageState['pricing'];
-      value: string | number | boolean | null;
-    }
-  | { type: 'SET_STEP'; step: number }
-  | { type: 'SET_PACKAGE_ID'; packageId: string }
-  | { type: 'RESET_FORM' };
-
-// Create the context
-const PackageContext = createContext<{
-  state: PackageState;
-  dispatch: React.Dispatch<PackageAction>;
-}>({
-  state: initialState,
-  dispatch: () => null,
-});
-
-// Reducer function
+// Update reducer to match new state shape
 const packageReducer = (
-  state: PackageState,
+  state: PackageFormState,
   action: PackageAction,
-): PackageState => {
+): PackageFormState => {
   switch (action.type) {
-    case 'UPDATE_FIELD':
-      return { ...state, [action.field]: action.value };
+    case 'UPDATE_BASIC':
+      return {
+        ...state,
+        basic: { ...state.basic, [action.field]: action.value },
+      };
+
     case 'SET_MEDIA_PREVIEW':
       return {
         ...state,
-        media: {
-          ...state.media,
-          [action.mediaType]: {
-            ...state.media[action.mediaType],
-            previewUrl: action.value,
+        basic: {
+          ...state.basic,
+          media: {
+            ...state.basic.media,
+            [action.mediaType]: {
+              ...state.basic.media[action.mediaType],
+              previewUrl: action.value,
+            },
           },
         },
       };
+
     case 'UPDATE_MEDIA':
       return {
         ...state,
-        media: {
-          ...state.media,
-          [action.mediaType]: {
-            ...state.media[action.mediaType],
-            ...action.value,
+        basic: {
+          ...state.basic,
+          media: {
+            ...state.basic.media,
+            [action.mediaType]: {
+              ...state.basic.media[action.mediaType],
+              ...action.value,
+            },
           },
         },
       };
+
     case 'UPDATE_PRICING':
       return {
         ...state,
         pricing: { ...state.pricing, [action.field]: action.value },
       };
+
     case 'SET_STEP':
       return { ...state, step: action.step };
+
     case 'SET_PACKAGE_ID':
       return { ...state, packageId: action.packageId };
+
     case 'RESET_FORM':
-      return initialState;
+      return { ...initialState, venueId: state.venueId };
+
     default:
       return state;
   }
@@ -161,5 +146,10 @@ export const PackageProvider = ({
   );
 };
 
-// Custom hook to use the context
-export const usePackageContext = () => useContext(PackageContext);
+export const usePackageContext = () => {
+  const context = useContext(PackageContext);
+  if (!context) {
+    throw new Error('usePackageContext must be used within a PackageProvider');
+  }
+  return context;
+};
