@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { usePackageContext } from '../../context/PackageContext';
 import { useForm } from 'react-hook-form';
 import { yupPricingSchema } from '@/lib/yupPricingSchema';
@@ -20,10 +20,16 @@ const Screen2 = () => {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<PackagePricingFormData>({
     resolver: yupResolver(yupPricingSchema),
+    defaultValues: state.pricing,
   });
+
+  useEffect(() => {
+    reset(state.pricing);
+  }, [state.pricing, reset]);
 
   const onSubmit = async (pricingData: PackagePricingFormData) => {
     try {

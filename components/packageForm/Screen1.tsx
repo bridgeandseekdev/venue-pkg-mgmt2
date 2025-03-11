@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { yupPackageSchema } from '../../lib/yupPackageSchema';
@@ -15,11 +15,17 @@ const Screen1 = () => {
   const {
     control,
     trigger,
+    reset,
     formState: { errors },
   } = useForm<PackageBasicFormData>({
     resolver: yupResolver(yupPackageSchema),
     defaultValues: state.basic,
   });
+
+  //useEffect to sync form with context
+  useEffect(() => {
+    reset(state.basic);
+  }, [state.basic, reset]);
 
   const { uploadStatus, handleFileUpload } = useFileUpload({
     onUploadSuccess: (url, key, mediaType) => {
