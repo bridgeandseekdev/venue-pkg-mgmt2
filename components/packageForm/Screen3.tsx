@@ -18,7 +18,7 @@ const Screen3 = () => {
         <h3 className="font-semibold mb-4">Package Details:</h3>
         <div className="space-y-2">
           <p>
-            <span className="font-medium">Name:</span> {state.name}
+            <span className="font-medium">Name:</span> {state.basic.name}
           </p>
           <p>
             <span className="font-medium">Type:</span>{' '}
